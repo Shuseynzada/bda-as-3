@@ -1,0 +1,22 @@
+docker exec -it [mongo-config-server-1]  mongosh --port 27019
+
+rs.initiate({
+  _id: "configReplSet",
+  configsvr: true,
+  members: [{ _id: 0, host: "mongo-config-server:27019" }]
+});
+
+docker exec -it [mongo-shard1-1] mongosh --port 27018
+
+rs.initiate({
+  _id: "shard1ReplSet",
+  members: [{ _id: 0, host: "mongo-shard1:27018" }]
+});
+
+docker exec -it [container_id_of_mongo_router] mongosh
+
+sh.addShard("rs0/mongo-shard1:27018");
+sh.addShard("rs1/mongo-shard2:27019");
+
+sh.enableSharding("yourDatabaseName");
+sh.shardCollection("yourDatabaseName.yourCollectionName", { "yourShardingKey": 1 });
